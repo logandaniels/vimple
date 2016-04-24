@@ -6,17 +6,30 @@
 
 // TODO: Some sort of easy-motion type thing where you tpye / to search, put in some text, and it switches to the tab that fuzzy matches your query
 
-safari.application.activeBrowserWindow.addEventListener("message", function(event) {
+safari.application.addEventListener("message", function(event) {
+    var bw = safari.application.activeBrowserWindow;
     switch (event.name) {
-        case "prevTab":
-            console.log("Handling prevTab");
-            var bw = safari.application.activeBrowserWindow;
+        case "nextTab":
             var currTabIndex = bw.tabs.indexOf(bw.activeTab);
-            console.log(currTabIndex);
-            bw.tabs[currTabIndex+1].activate();
+            var newTabIndex = (currTabIndex+1) % bw.tabs.length;
+            bw.tabs[newTabIndex].activate();
+            break;
+        case "prevTab":
+            var currTabIndex = bw.tabs.indexOf(bw.activeTab);
+            var newTabIndex = currTabIndex-1;
+            if (newTabIndex === -1) {
+                newTabIndex = bw.tabs.length-1;
+            }
+            bw.tabs[newTabIndex].activate();
+            break;
+        case "closeTab":
+            bw.activeTab.close();
+            break;
+        case "newTab":
+            bw.openTab("foreground");
             break;
     }
-}, true);
+}, false);
 
 
 </script>
