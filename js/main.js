@@ -13,7 +13,8 @@ var handleScroll = function(event) {
 }
 
 var handleKeyPress = function(event) {
-    if (document.activeElement.tagName === "INPUT") {
+    if (document.activeElement.tagName === "INPUT" ||
+        document.activeElement.tagName === "TEXTAREA") {
         return;
     }
     if (hintMode) {
