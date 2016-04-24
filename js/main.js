@@ -1,3 +1,13 @@
+var hintTexts = [];
+var linkHints = [];
+var hintMode = false;
+
+for (var c = "A".charCodeAt(0); c < "Z".charCodeAt(0); c++) {
+    for (var c2 = "A".charCodeAt(0); c2 < "Z".charCodeAt(0); c2++) {
+        hintTexts.push(String.fromCharCode(c) + String.fromCharCode(c2));
+    }
+}
+
 var handleScroll = function(event) {
     removeHints();
 }
@@ -6,75 +16,110 @@ var handleKeyPress = function(event) {
     if (document.activeElement.tagName === "INPUT") {
         return;
     }
-        switch (event.keyCode) {
-            case "J".charCodeAt(0):
-                if (event.shiftKey) {
-                    window.history.back();
-                } else {
-                    window.scrollBy(0, 100);
-                }
-                break;
-            case "K".charCodeAt(0):
-                if (event.shiftKey) {
-                    window.history.forward();
-                } else {
-                    window.scrollBy(0, -100);
-                }
-                break;
-            case "L".charCodeAt(0):
-                if (event.shiftKey) {
-                    safari.self.tab.dispatchMessage("nextTab", "test");
-                }
-                break;
-            case "H".charCodeAt(0):
-                if (event.shiftKey) {
-                    safari.self.tab.dispatchMessage("prevTab", "test");
-                }
-                break;
-            case "T".charCodeAt(0):
-                safari.self.tab.dispatchMessage("newTab", "test");
-                break;
-            case "X".charCodeAt(0):
-                safari.self.tab.dispatchMessage("closeTab", "test");
-                break;
-            case "R".charCodeAt(0):
-                document.location.reload(true);
-                break;
-            case "F".charCodeAt(0):
-                showLinkHints();
-                break;
-            case 27: // ESCAPE
-                removeHints();
-                break;
+    if (hintMode) {
+        handleHintEvent(event);
+    } else {
+    switch (event.keyCode) {
+        case "J".charCodeAt(0):
+            if (event.shiftKey) {
+                window.history.back();
+            } else {
+                window.scrollBy(0, 100);
             }
-        return false;
+            break;
+        case "K".charCodeAt(0):
+            if (event.shiftKey) {
+                window.history.forward();
+            } else {
+                window.scrollBy(0, -100);
+            }
+            break;
+        case "L".charCodeAt(0):
+            if (event.shiftKey) {
+                safari.self.tab.dispatchMessage("nextTab", "test");
+            }
+            break;
+        case "H".charCodeAt(0):
+            if (event.shiftKey) {
+                safari.self.tab.dispatchMessage("prevTab", "test");
+            }
+            break;
+        case "T".charCodeAt(0):
+            safari.self.tab.dispatchMessage("newTab", "test");
+            break;
+        case "X".charCodeAt(0):
+            safari.self.tab.dispatchMessage("closeTab", "test");
+            break;
+        case "R".charCodeAt(0):
+            document.location.reload(true);
+            break;
+        case "F".charCodeAt(0):
+            showLinkHints();
+            break;
+        case 27: // ESCAPE
+            removeHints();
+            break;
+        }
+    }
+    return false;
 }
 
+function handleHintEvent(event) {
+    var pressed = String.fromCharCode(event.keyCode);
+    var i = 0;
+    while (linkHints[i]) {
+        var hint = linkHints[i];
+        if (hint.hintText[hint.typedIndex] !== pressed) {
+            hint.node.parentNode.removeChild(hint.node);
+            linkHints.splice(i,1);
+        } else {
+            hint.typedIndex++;
+            updateHintText(hint);
+            i++;
+        }
+    }
+    if (linkHints.length == 1) {
+        window.location.href = linkHints[0].url;
+    }
+}
+
+function updateHintText(hint) {
+    hint.node.innerHTML = "<span style=\"color: grey\">" + hint.hintText.slice(0,hint.typedIndex) + "</span>"+ "<b>" + hint.hintText.slice(hint.typedIndex, hint.hintText.length) + "</b>";
+}
+
+
 function showLinkHints() {
+    hintMode = true;
     var visibleLinks = getVisibleLinks();
-    for (var i = 0; i < visibleLinks.length; i++) {
+    for (var i = 0; i < visibleLinks.length && i < hintTexts.length; i++) {
         var link = visibleLinks[i];
         var rect = link.getBoundingClientRect();
-        var hint = document.createElement("div");
-        hint.textContent = "test";
-        hint.style.position = "fixed";
-        hint.style.top = "" + Math.round(rect.top) + "px";
-        hint.style.left = "" + Math.round(rect.left) + "px";
-        hint.style["z-index"] = "1000";
-        hint.style.color = "black";
-        hint.style.background = "yellow"
-        hint.className = "vimple-hint";
-        document.body.appendChild(hint);
+        var hint = {};
+        var hintNode = document.createElement("div");
+        hint.url = link.getAttribute("href");
+        hint.hintText = hintTexts[i];
+        hint.typedIndex = 0;
+        hint.node = hintNode;
+        updateHintText(hint);
+        hintNode.style.position = "fixed";
+        hintNode.style.top = "" + Math.round(rect.top) + "px";
+        hintNode.style.left = "" + Math.round(rect.left) + "px";
+        hintNode.style["z-index"] = "1000";
+        hintNode.style.color = "black";
+        hintNode.style.background = "yellow"
+        hintNode.className = "vimple-hintNode";
+        document.body.appendChild(hintNode);
+        linkHints.push(hint);
     }
-    
 }
 
 function removeHints() {
     var hints = document.getElementsByClassName("vimple-hint");
     while (hints[0]) {
         var hint = hints[0];
-        hint.parentNode.removeChild(hint);
+        hint.node.parentNode.removeChild(hint);
     }
+    hintMode = false;
 }
 
 function getVisibleLinks() {
