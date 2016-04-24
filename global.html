@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>global HTML page</title>
+<script type="text/javascript">
+
+// TODO: Some sort of easy-motion type thing where you tpye / to search, put in some text, and it switches to the tab that fuzzy matches your query
+
+safari.application.activeBrowserWindow.addEventListener("message", function(event) {
+    switch (event.name) {
+        case "prevTab":
+            console.log("Handling prevTab");
+            var bw = safari.application.activeBrowserWindow;
+            var currTabIndex = bw.tabs.indexOf(bw.activeTab);
+            console.log(currTabIndex);
+            bw.tabs[currTabIndex+1].activate();
+            break;
+    }
+}, true);
+
+
+</script>
+</head>
+<body>
+</body>
+</html>
