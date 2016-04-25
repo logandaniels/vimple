@@ -2,12 +2,14 @@ var hintTexts = [];
 var linkHints = [];
 var hintMode = false;
 var goMode = false;
+var insertMode = false;
 
 var codes = {};
 for (var c = "A".charCodeAt(0); c < "Z".charCodeAt(0); c++) {
     codes[String.fromCharCode(c)] = c;
     codes[String.fromCharCode(c).toLowerCase()] = c;
 }
+codes["ESC"] = 27;
 
 for (var c = codes["A"]; c < codes["Z"]; c++) {
     for (var c2 = codes["A"]; c2 < codes["Z"]; c2++) {
@@ -22,7 +24,8 @@ var handleScroll = function(event) {
 }
 
 var handleKeyPress = function(event) {
-    if (document.activeElement.tagName === "INPUT" ||
+    if ((insertMode && event.keyCode !== codes["ESC"]) ||
+        document.activeElement.tagName === "INPUT" ||
         document.activeElement.tagName === "TEXTAREA" ||
         document.activeElement.getAttribute("contentEditable") === "true") {
         return;
@@ -80,7 +83,11 @@ var handleKeyPress = function(event) {
                 goMode = true;
             }
             break;
-        case 27: // ESCAPE
+        case codes["I"]:
+            insertMode = true;
+            break;
+        case codes["ESC"]:
+            insertMode = false;
             break;
         }
     }
@@ -100,7 +107,7 @@ function handleGoEvent(event) {
 }
 
 function handleHintEvent(event) {
-    if (event.keyCode === 27) { // ESCAPE
+    if (event.keyCode === codes["ESC"]) {
         removeHints();
         hintMode = false;
         return;
