@@ -103,6 +103,7 @@ function updateHintText(hint) {
 function showLinkHints() {
     hintMode = true;
     var visibleLinks = getVisibleLinks();
+    var hintContainer = document.createElement("div");
     for (var i = 0; i < visibleLinks.length && i < hintTexts.length; i++) {
         var link = visibleLinks[i];
         var rect = link.getBoundingClientRect();
@@ -113,16 +114,18 @@ function showLinkHints() {
         hint.typedIndex = 0;
         hint.node = hintNode;
         updateHintText(hint);
-        hintNode.style.position = "fixed";
-        hintNode.style.top = "" + Math.round(rect.top) + "px";
-        hintNode.style.left = "" + Math.round(rect.left) + "px";
-        hintNode.style["z-index"] = "1000";
-        hintNode.style.color = "black";
-        hintNode.style.background = "yellow"
+
+        var top = "" + Math.round(rect.top) + "px";
+        var left = "" + Math.round(rect.left) + "px";
+        var style = "position: fixed; top: " + top + "; left: " + left + "; ";
+        style += "z-index: 1000; color: black; background: yellow";
+        hintNode.setAttribute("style", style);
+
         hintNode.className = "vimple-hintNode";
-        document.body.appendChild(hintNode);
+        hintContainer.appendChild(hintNode);
         linkHints.push(hint);
     }
+    document.body.appendChild(hintContainer);
 }
 
 function removeHints() {
@@ -137,9 +140,9 @@ function removeHints() {
 function getVisibleLinks() {
     var a = document.getElementsByTagName("a");
     var links = Array.prototype.filter.call(a, function(el) {
-        return el.hasAttribute("href");
+        return el.hasAttribute("href") && isVisible(el);
     });
-    return Array.prototype.filter.call(links, isVisible);
+    return links;
 }
 
 function isVisible(elem) {
