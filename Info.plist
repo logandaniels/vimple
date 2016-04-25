@@ -23,6 +23,10 @@
 	</dict>
 	<key>Content</key>
 	<dict>
+		<key>Blacklist</key>
+		<array>
+			<string>https://docs.google.com/*</string>
+		</array>
 		<key>Scripts</key>
 		<dict>
 			<key>End</key>

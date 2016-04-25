@@ -9,12 +9,15 @@ for (var c = "A".charCodeAt(0); c < "Z".charCodeAt(0); c++) {
 }
 
 var handleScroll = function(event) {
-    removeHints();
+    if (hintMode) {
+        removeHints();
+    }
 }
 
 var handleKeyPress = function(event) {
     if (document.activeElement.tagName === "INPUT" ||
-        document.activeElement.tagName === "TEXTAREA") {
+        document.activeElement.tagName === "TEXTAREA" ||
+        document.activeElement.getAttribute("contentEditable") === "true") {
         return;
     }
     if (hintMode) {
@@ -55,10 +58,11 @@ var handleKeyPress = function(event) {
             document.location.reload(true);
             break;
         case "F".charCodeAt(0):
-            showLinkHints();
+            if (!event.shiftKey && !event.metaKey) {
+                showLinkHints();
+            }
             break;
         case 27: // ESCAPE
-            removeHints();
             break;
         }
     }
@@ -66,6 +70,11 @@ var handleKeyPress = function(event) {
 }
 
 function handleHintEvent(event) {
+    if (event.keyCode === 27) { // ESCAPE
+        removeHints();
+        hintMode = false;
+        return;
+    }
     var pressed = String.fromCharCode(event.keyCode);
     var i = 0;
     while (linkHints[i]) {
@@ -81,6 +90,8 @@ function handleHintEvent(event) {
     }
     if (linkHints.length == 1) {
         window.location.href = linkHints[0].url;
+    } else if (linkHints.length == 0) {
+        removeHints();
     }
 }
 
@@ -115,10 +126,10 @@ function showLinkHints() {
 }
 
 function removeHints() {
-    var hints = document.getElementsByClassName("vimple-hint");
-    while (hints[0]) {
-        var hint = hints[0];
-        hint.node.parentNode.removeChild(hint);
+    while (linkHints[0]) {
+        var hint = linkHints[0];
+        hint.node.parentNode.removeChild(hint.node);
+        linkHints.splice(0,1);
     }
     hintMode = false;
 }
