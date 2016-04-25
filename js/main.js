@@ -1,9 +1,16 @@
 var hintTexts = [];
 var linkHints = [];
 var hintMode = false;
+var goMode = false;
 
+var codes = {};
 for (var c = "A".charCodeAt(0); c < "Z".charCodeAt(0); c++) {
-    for (var c2 = "A".charCodeAt(0); c2 < "Z".charCodeAt(0); c2++) {
+    codes[String.fromCharCode(c)] = c;
+    codes[String.fromCharCode(c).toLowerCase()] = c;
+}
+
+for (var c = codes["A"]; c < codes["Z"]; c++) {
+    for (var c2 = codes["A"]; c2 < codes["Z"]; c2++) {
         hintTexts.push(String.fromCharCode(c) + String.fromCharCode(c2));
     }
 }
@@ -22,44 +29,55 @@ var handleKeyPress = function(event) {
     }
     if (hintMode) {
         handleHintEvent(event);
+    } else if (goMode) {
+        handleGoEvent(event);
     } else {
     switch (event.keyCode) {
-        case "J".charCodeAt(0):
+        case codes["J"]:
             if (event.shiftKey) {
                 window.history.back();
             } else {
                 window.scrollBy(0, 100);
             }
             break;
-        case "K".charCodeAt(0):
+        case codes["K"]:
             if (event.shiftKey) {
                 window.history.forward();
             } else {
                 window.scrollBy(0, -100);
             }
             break;
-        case "L".charCodeAt(0):
+        case codes["L"]:
             if (event.shiftKey) {
                 safari.self.tab.dispatchMessage("nextTab", "test");
             }
             break;
-        case "H".charCodeAt(0):
+        case codes["H"]:
             if (event.shiftKey) {
                 safari.self.tab.dispatchMessage("prevTab", "test");
             }
             break;
-        case "T".charCodeAt(0):
+        case codes["T"]:
             safari.self.tab.dispatchMessage("newTab", "test");
             break;
-        case "X".charCodeAt(0):
+        case codes["X"]:
             safari.self.tab.dispatchMessage("closeTab", "test");
             break;
-        case "R".charCodeAt(0):
+        case codes["R"]:
             document.location.reload(true);
             break;
-        case "F".charCodeAt(0):
+        case codes["F"]:
             if (!event.shiftKey && !event.metaKey) {
                 showLinkHints();
+            }
+            break;
+        case codes["G"]:
+            if (event.shiftKey) {
+                var maxScroll = Math.max( document.body.scrollHeight, document.body.offsetHeight, 
+                   document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );
+                window.scrollTo(0, maxScroll)
+            } else {
+                goMode = true;
             }
             break;
         case 27: // ESCAPE
@@ -67,6 +85,18 @@ var handleKeyPress = function(event) {
         }
     }
     return false;
+}
+
+function handleGoEvent(event) {
+    switch (event.keyCode) {
+        case codes["G"]:
+            window.scrollTo(0,0);
+            goMode = false;
+            break;
+        default:
+            goMode = false;
+            break;
+    }
 }
 
 function handleHintEvent(event) {
