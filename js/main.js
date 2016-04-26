@@ -4,15 +4,16 @@ var hintMode = false;
 var goMode = false;
 var insertMode = false;
 
+
 var codes = {};
-for (var c = "A".charCodeAt(0); c < "Z".charCodeAt(0); c++) {
+for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     codes[String.fromCharCode(c)] = c;
     codes[String.fromCharCode(c).toLowerCase()] = c;
 }
 codes["ESC"] = 27;
 
-for (var c = codes["A"]; c < codes["Z"]; c++) {
-    for (var c2 = codes["A"]; c2 < codes["Z"]; c2++) {
+for (var c = codes["A"]; c <= codes["F"]; c++) {
+    for (var c2 = codes["A"]; c2 <= codes["Z"]; c2++) {
         hintTexts.push(String.fromCharCode(c) + String.fromCharCode(c2));
     }
 }
@@ -23,8 +24,52 @@ var handleScroll = function(event) {
     }
 }
 
+function handleEscape() {
+    insertMode = false;
+}
+
+function scrollDown() {
+    window.scrollBy(0, 100);
+}
+function scrollUp() {
+    window.scrollBy(0, -100);
+}
+function prevTab() {
+    safari.self.tab.dispatchMessage("prevTab", "test");
+}
+function nextTab() {
+    safari.self.tab.dispatchMessage("nextTab", "test");
+}
+function historyBack() {
+    window.history.back();
+}
+function historyForward() {
+    window.history.forward();
+}
+function newTab() {
+    safari.self.tab.dispatchMessage("newTab", "test");
+}
+function closeTab() {
+    safari.self.tab.dispatchMessage("closeTab", "test");
+}
+function reload() {
+    document.location.reload(true);
+}
+function scrollToBottom() {
+    var maxScroll = Math.max( document.body.scrollHeight, document.body.offsetHeight, 
+       document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );
+    window.scrollTo(0, maxScroll)
+}
+function activateInsertMode() {
+    insertMode = true;
+}
+function activateGoMode() {
+    goMode = true;
+}
+
 var handleKeyPress = function(event) {
-    if ((insertMode && event.keyCode !== codes["ESC"]) ||
+    if (event.metaKey ||
+        (insertMode && event.keyCode !== codes["ESC"]) ||
         document.activeElement.tagName === "INPUT" ||
         document.activeElement.tagName === "TEXTAREA" ||
         document.activeElement.getAttribute("contentEditable") === "true") {
@@ -35,60 +80,12 @@ var handleKeyPress = function(event) {
     } else if (goMode) {
         handleGoEvent(event);
     } else {
-    switch (event.keyCode) {
-        case codes["J"]:
-            if (event.shiftKey) {
-                window.history.back();
-            } else {
-                window.scrollBy(0, 100);
-            }
-            break;
-        case codes["K"]:
-            if (event.shiftKey) {
-                window.history.forward();
-            } else {
-                window.scrollBy(0, -100);
-            }
-            break;
-        case codes["L"]:
-            if (event.shiftKey) {
-                safari.self.tab.dispatchMessage("nextTab", "test");
-            }
-            break;
-        case codes["H"]:
-            if (event.shiftKey) {
-                safari.self.tab.dispatchMessage("prevTab", "test");
-            }
-            break;
-        case codes["T"]:
-            safari.self.tab.dispatchMessage("newTab", "test");
-            break;
-        case codes["X"]:
-            safari.self.tab.dispatchMessage("closeTab", "test");
-            break;
-        case codes["R"]:
-            document.location.reload(true);
-            break;
-        case codes["F"]:
-            if (!event.shiftKey && !event.metaKey) {
-                showLinkHints();
-            }
-            break;
-        case codes["G"]:
-            if (event.shiftKey) {
-                var maxScroll = Math.max( document.body.scrollHeight, document.body.offsetHeight, 
-                   document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );
-                window.scrollTo(0, maxScroll)
-            } else {
-                goMode = true;
-            }
-            break;
-        case codes["I"]:
-            insertMode = true;
-            break;
-        case codes["ESC"]:
-            insertMode = false;
-            break;
+        var key = String.fromCharCode(event.keyCode);
+        if (!event.shiftKey) {
+            key = key.toLowerCase();
+        }
+        if (shortcuts.hasOwnProperty(key)) {
+            shortcuts[key]();
         }
     }
     return false;
@@ -190,21 +187,38 @@ function isVisible(elem) {
        return false;
     }
 
-    return isHidden(elem);
+    return !isHidden(elem);
 }
 
 function isHidden(elem) {
     if  (window.getComputedStyle(elem).visibility === "hidden" ||
          window.getComputedStyle(elem).display === "none" ||
          elem.getAttribute("aria-hidden") === "true") {
-        return false;
+        return true;
     }
     if (elem.parentNode.style) {
         return isHidden(elem.parentNode);
     } else {
-        return true;
+        return false;
     }
 }
+
+var shortcuts = {
+    "j" : scrollDown,
+    "k" : scrollUp,
+    "J" : historyBack,
+    "K" : historyForward,
+    "H" : prevTab,
+    "L" : nextTab,
+    "t" : newTab,
+    "x" : closeTab,
+    "G" : scrollToBottom,
+    "g" : activateGoMode,
+//    "gg" : scrollToTop,
+    "f" : showLinkHints,
+    "i" : activateInsertMode,
+    "ESC" : handleEscape
+};
 
 if (!document["hidden"]) {
     document.addEventListener("keydown", handleKeyPress);
