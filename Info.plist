@@ -25,7 +25,7 @@
 	<dict>
 		<key>Blacklist</key>
 		<array>
-			<string>https://docs.google.com/*</string>
+			<string>http://docs.google.com/*</string>
 		</array>
 		<key>Scripts</key>
 		<dict>

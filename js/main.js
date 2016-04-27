@@ -11,6 +11,7 @@ for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     codes[c] = String.fromCharCode(c);
 }
 codes[27] = "ESC";
+codes[191] = "/";
 
 for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     for (var c2 = "A".charCodeAt(0); c2 <= "Z".charCodeAt(0); c2++) {
@@ -22,6 +23,10 @@ var handleScroll = function(event) {
     if (hintMode) {
         endHintMode();
     }
+}
+
+function openSettings() {
+    safari.self.tab.dispatchMessage("newTab", safari.extension.baseURI + "settings.html");
 }
 
 function handleEscape() {
@@ -36,10 +41,10 @@ function scrollUp() {
     window.scrollBy(0, -100);
 }
 function prevTab() {
-    safari.self.tab.dispatchMessage("prevTab", "test");
+    safari.self.tab.dispatchMessage("prevTab");
 }
 function nextTab() {
-    safari.self.tab.dispatchMessage("nextTab", "test");
+    safari.self.tab.dispatchMessage("nextTab");
 }
 function historyBack() {
     window.history.back();
@@ -48,10 +53,10 @@ function historyForward() {
     window.history.forward();
 }
 function newTab() {
-    safari.self.tab.dispatchMessage("newTab", "test");
+    safari.self.tab.dispatchMessage("newTab");
 }
 function closeTab() {
-    safari.self.tab.dispatchMessage("closeTab", "test");
+    safari.self.tab.dispatchMessage("closeTab");
 }
 function reload() {
     document.location.reload(true);
@@ -99,6 +104,15 @@ var handleKeyPress = function(event) {
                 case "ESC":
                     shortcuts[key]();
                     break;
+                case "/":
+                    if (event.shiftKey) {
+                      shortcuts["?"]();
+                    } else {
+                      shortcuts["/"]();
+                    }
+                    break;
+                default:
+                  break;
             }
         }
     }
@@ -150,7 +164,7 @@ function updateHintText(hint) {
 }
 
 
-function showLinkHints() {
+function openLink() {
     showStatusBar("Open link in current tab");
     hintMode = true;
     var visibleLinks = getVisibleLinks();
@@ -250,22 +264,43 @@ function hideStatusBar(text) {
     }
 }
 
-var shortcuts = {
-    "j" : scrollDown,
-    "k" : scrollUp,
-    "J" : historyBack,
-    "K" : historyForward,
-    "H" : prevTab,
-    "L" : nextTab,
-    "t" : newTab,
-    "x" : closeTab,
-    "G" : scrollToBottom,
-    "g" : activateGoMode,
+var shortcuts = {};
+
+var keyBindingsToFunctions = {
+    "scrollDown" : scrollDown,
+    "scrollUp" : scrollUp,
+    "historyBack" : historyBack,
+    "historyForward" : historyForward,
+    "prevTab" : prevTab,
+    "nextTab" : nextTab,
+    "newTab" : newTab,
+    "closeTab" : closeTab,
+    "scrollToBottom" : scrollToBottom,
+    "activateGoMode" : activateGoMode,
 //    "gg" : scrollToTop,
-    "f" : showLinkHints,
-    "i" : activateInsertMode,
-    "ESC" : handleEscape
-};
+    "openLink" : openLink,
+    "activateInsertMode" : activateInsertMode,
+    "handleEscape" : handleEscape,
+    "openSettings" : openSettings
+}
+
+function setShortcutsFromSettings(settings) {
+  console.log("Got settings");
+  console.log(settings);
+  shortcuts = {};
+  for (var settingName in settings) {
+    shortcuts[settings[settingName]] = keyBindingsToFunctions[settingName];
+  }
+}
+
+
+safari.self.addEventListener("message", function(event) {
+    switch (event.name) {
+      case "getSettings":
+        setShortcutsFromSettings(event.message);
+        break;
+    }
+}, false);
 
 if (!document["hidden"]) {
     document.addEventListener("keydown", handleKeyPress);
@@ -284,3 +319,5 @@ document.addEventListener("visibilitychange", function(event) {
         document.removeEventListener("keydown", handleKeyPress);
     }
 });
+
+safari.self.tab.dispatchMessage("getSettings");

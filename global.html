@@ -6,6 +6,56 @@
 
 // TODO: Some sort of easy-motion type thing where you tpye / to search, put in some text, and it switches to the tab that fuzzy matches your query
 
+var defaultSettings = {
+    scrollDown : "j",
+    scrollUp : "k",
+    historyBack : "J",
+    historyForward : "K",
+    prevTab : "H",
+    nextTab : "L",
+    newTab : "t",
+    closeTab : "x",
+    scrollToBottom : "G",
+    activateGoMode : "g",
+//    "gg" : scrollToTop,
+    openLink : "f",
+    activateInsertMode : "i",
+    handleEscape : "ESC",
+    openSettings : "?"
+}
+
+if (safari.extension.settings["firstRun"] === "true") {
+  for (var key in defaultSettings) {
+    safari.extension.settings[key] = defaultSettings[key];
+  }
+  safari.extension.settings["firstRun"] = "false";
+}
+
+function getSettings() {
+  var settings = {};
+  Object.getOwnPropertyNames(safari.extension.settings).forEach(function(settingName) {
+    settings[settingName] = safari.extension.settings[settingName];
+  });
+  return settings;
+}
+
+function setSettings(newSettings) {
+  for (var key in newSettings) {
+    safari.extension.settings[key] = newSettings[key];
+  }
+  // Update settings in all open tabs
+  sendMessageToAllTabs("getSettings", getSettings());
+}
+
+function sendMessageToAllTabs(message, data) {
+    var bw = safari.application.activeBrowserWindow;
+    for (var i = 0; i < bw.tabs.length; i++) {
+      var tab = bw.tabs[i];
+      tab.page.dispatchMessage(message, data);
+    }
+}
+  
+
 safari.application.addEventListener("message", function(event) {
     var bw = safari.application.activeBrowserWindow;
     switch (event.name) {
@@ -26,7 +76,22 @@ safari.application.addEventListener("message", function(event) {
             bw.activeTab.close();
             break;
         case "newTab":
-            bw.openTab("foreground");
+            if (event.message) {
+              var tab = bw.openTab("foreground");
+              tab.url = event.message;
+            } else {
+              bw.openTab("foreground");
+            }
+            break;
+        case "openSettings":
+            var popover = safari.extension.createPopover(
+              "settings", safari.extension.baseURI + "settings.html", 800, 800);
+            break;
+        case "getSettings":
+            event.target.page.dispatchMessage("getSettings", getSettings());
+            break;
+        case "setSettings":
+            setSettings(event.message);
             break;
     }
 }, false);

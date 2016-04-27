@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>vimple Settings</title>
+<style>
+
+label {
+  display: inline-block;
+  text-align: right;
+  width: 15%;
+}
+
+.invalid-setting {
+  border: 2px inset red;
+}
+
+</style>
+<script type="text/javascript">
+
+var gettingInitialSettings = true;
+
+function setInitialSettings(settings) {
+  for (var settingName in settings) {
+    var input = document.getElementById(settingName);
+    if (input) {
+      input.value = settings[settingName];
+    }
+  }
+}
+
+function validateSettings() {
+  var settingsInputs = document.getElementsByClassName("keySetting");
+  var valid = true;
+  for (var i = 0; i < settingsInputs.length; i++) {
+    var input = settingsInputs[i];
+    input.classList.remove("invalid-setting");
+
+    var val = input.value.trim();
+    if (val.length === 0) {
+      continue;
+    }
+
+    if (!val.match(/[a-z]/i)) {
+      input.classList.add("invalid-setting");
+      console.log("ERROR WITH " + input.value);
+      valid = false;
+    }
+
+    // Check if user bound two actions to the same shortcut
+    for (var j = i-1; j >= 0; j--) {
+      var otherInput = settingsInputs[j];
+      var otherVal = otherInput.value.trim();
+      if (val === otherVal) {
+        input.classList.add("invalid-setting");
+        otherInput.classList.add("invalid-setting");
+        valid = false;
+      }
+    }
+  }
+
+  return valid;
+}
+
+function saveSettings() {
+  if (!validateSettings()) {
+    return;
+  }
+
+  var settingsInputs = document.getElementsByClassName("keySetting");
+  var newSettings = {};
+  for (var i = 0; i < settingsInputs.length; i++) {
+    var input = settingsInputs[i];
+    var settingName = input.id;
+    newSettings[settingName] = input.value.trim();
+  }
+
+  safari.self.tab.dispatchMessage("setSettings", newSettings);
+
+}
+
+
+function logSettings() {
+  safari.self.tab.dispatchMessage("getSettings");
+
+}
+
+safari.self.addEventListener("message", function(event) {
+    switch (event.name) {
+      case "getSettings":
+        if (gettingInitialSettings) {
+          setInitialSettings(event.message);
+          gettingInitialSettings = false;
+        }
+        break;
+    }
+}, false);
+
+window.addEventListener("load", function () {
+  var b = document.getElementById("saveSettingsButton");
+  b.addEventListener("click", saveSettings);
+  b = document.getElementById("logSettingsButton");
+  b.addEventListener("click", logSettings);
+
+  // Get initial settings
+  safari.self.tab.dispatchMessage("getSettings");
+});
+
+</script>
+</head>
+<body>
+
+<form>
+  <label>Activate 'go' mode</label><input type="text" class="keySetting" id="activateGoMode" /><br />
+  <label>Scroll to bottom</label><input type="text" class="keySetting" id="scrollToBottom" /><br />
+  <label>Scroll up</label><input type="text" class="keySetting" id="scrollUp" /><br />
+  <label>Scroll down</label><input type="text" class="keySetting" id="scrollDown" /><br />
+  <label>Open link in current tab</label><input type="text" class="keySetting" id="openLink" /><br />
+  <label>Open a new tab</label><input type="text" class="keySetting" id="newTab" /><br />
+  <label>Close current tab</label><input type="text" class="keySetting" id="closeTab" /><br />
+  <label>Go back in history</label><input type="text" class="keySetting" id="historyBack" /><br />
+  <label>Go forward in history</label><input type="text" class="keySetting" id="historyForward" /><br />
+  <label>Switch to previous tab</label><input type="text" class="keySetting" id="prevTab" /><br />
+  <label>Switch to next tab</label><input type="text" class="keySetting" id="nextTab" /><br />
+  <label>Activate insert mode</label><input type="text" class="keySetting" id="activateInsertMode" /><br />
+</form>
+
+<button id="saveSettingsButton">Save settings</button>
+
+<button id="logSettingsButton">Log settings</button>
+</body>
+</html>
