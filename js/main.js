@@ -8,13 +8,12 @@ var statusBarEnabled = true;
 
 var codes = {};
 for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
-    codes[String.fromCharCode(c)] = c;
-    codes[String.fromCharCode(c).toLowerCase()] = c;
+    codes[c] = String.fromCharCode(c);
 }
-codes["ESC"] = 27;
+codes[27] = "ESC";
 
-for (var c = codes["A"]; c <= codes["F"]; c++) {
-    for (var c2 = codes["A"]; c2 <= codes["Z"]; c2++) {
+for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
+    for (var c2 = "A".charCodeAt(0); c2 <= "Z".charCodeAt(0); c2++) {
         hintTexts.push(String.fromCharCode(c) + String.fromCharCode(c2));
     }
 }
@@ -26,6 +25,7 @@ var handleScroll = function(event) {
 }
 
 function handleEscape() {
+    hideStatusBar();
     insertMode = false;
 }
 
@@ -62,6 +62,7 @@ function scrollToBottom() {
     window.scrollTo(0, maxScroll)
 }
 function activateInsertMode() {
+    showStatusBar("Insert mode");
     insertMode = true;
 }
 function activateGoMode() {
@@ -70,8 +71,12 @@ function activateGoMode() {
 }
 
 var handleKeyPress = function(event) {
+    var key = codes[event.keyCode];
+    if (!key) {
+      return;
+    }
     if (event.metaKey ||
-        (insertMode && event.keyCode !== codes["ESC"]) ||
+        (insertMode && key !== "ESC") ||
         document.activeElement.tagName === "INPUT" ||
         document.activeElement.tagName === "TEXTAREA" ||
         document.activeElement.getAttribute("contentEditable") === "true") {
@@ -82,20 +87,28 @@ var handleKeyPress = function(event) {
     } else if (goMode) {
         handleGoEvent(event);
     } else {
-        var key = String.fromCharCode(event.keyCode);
-        if (!event.shiftKey) {
-            key = key.toLowerCase();
-        }
-        if (shortcuts.hasOwnProperty(key)) {
-            shortcuts[key]();
+        if (event.keyCode >= "A".charCodeAt(0) && event.keyCode <= "Z".charCodeAt(0)) {
+            if (!event.shiftKey) {
+                key = key.toLowerCase();
+            }
+            if (shortcuts.hasOwnProperty(key)) {
+                shortcuts[key]();
+            }
+        } else {
+            switch (key) {
+                case "ESC":
+                    shortcuts[key]();
+                    break;
+            }
         }
     }
     return false;
 }
 
 function handleGoEvent(event) {
-    switch (event.keyCode) {
-        case codes["G"]:
+    var key = codes[event.keyCode];
+    switch (key) {
+        case "G":
             window.scrollTo(0,0);
             goMode = false;
             hideStatusBar();
@@ -108,7 +121,7 @@ function handleGoEvent(event) {
 }
 
 function handleHintEvent(event) {
-    if (event.keyCode === codes["ESC"]) {
+    if (codes[event.keyCode] === "ESC") {
         endHintMode();
         return;
     }
@@ -141,7 +154,11 @@ function showLinkHints() {
     showStatusBar("Open link in current tab");
     hintMode = true;
     var visibleLinks = getVisibleLinks();
-    var hintContainer = document.createElement("div");
+    var hintContainer = document.getElementById("vimple-hintcontainer");
+    if (!hintContainer) {
+        hintContainer = document.createElement("div");
+        hintContainer.setAttribute("id", "vimple-hintcontainer");
+    }
     for (var i = 0; i < visibleLinks.length && i < hintTexts.length; i++) {
         var link = visibleLinks[i];
         var rect = link.getBoundingClientRect();
