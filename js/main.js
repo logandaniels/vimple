@@ -3,6 +3,7 @@ var linkHints = [];
 var hintMode = false;
 var goMode = false;
 var insertMode = false;
+var statusBarEnabled = true;
 
 
 var codes = {};
@@ -20,7 +21,7 @@ for (var c = codes["A"]; c <= codes["F"]; c++) {
 
 var handleScroll = function(event) {
     if (hintMode) {
-        removeHints();
+        endHintMode();
     }
 }
 
@@ -64,6 +65,7 @@ function activateInsertMode() {
     insertMode = true;
 }
 function activateGoMode() {
+    showStatusBar("Go to...");
     goMode = true;
 }
 
@@ -96,17 +98,18 @@ function handleGoEvent(event) {
         case codes["G"]:
             window.scrollTo(0,0);
             goMode = false;
+            hideStatusBar();
             break;
         default:
             goMode = false;
+            hideStatusBar();
             break;
     }
 }
 
 function handleHintEvent(event) {
     if (event.keyCode === codes["ESC"]) {
-        removeHints();
-        hintMode = false;
+        endHintMode();
         return;
     }
     var pressed = String.fromCharCode(event.keyCode);
@@ -125,7 +128,7 @@ function handleHintEvent(event) {
     if (linkHints.length == 1) {
         window.location.href = linkHints[0].url;
     } else if (linkHints.length == 0) {
-        removeHints();
+        endHintMode();
     }
 }
 
@@ -135,6 +138,7 @@ function updateHintText(hint) {
 
 
 function showLinkHints() {
+    showStatusBar("Open link in current tab");
     hintMode = true;
     var visibleLinks = getVisibleLinks();
     var hintContainer = document.createElement("div");
@@ -162,13 +166,14 @@ function showLinkHints() {
     document.body.appendChild(hintContainer);
 }
 
-function removeHints() {
+function endHintMode() {
     while (linkHints[0]) {
         var hint = linkHints[0];
         hint.node.parentNode.removeChild(hint.node);
         linkHints.splice(0,1);
     }
     hintMode = false;
+    hideStatusBar();
 }
 
 function getVisibleLinks() {
@@ -196,10 +201,35 @@ function isHidden(elem) {
          elem.getAttribute("aria-hidden") === "true") {
         return true;
     }
+    
+    // Check if of its ancestors is hidden
     if (elem.parentNode.style) {
         return isHidden(elem.parentNode);
     } else {
         return false;
+    }
+}
+
+function showStatusBar(text) {
+    if (!statusBarEnabled) {
+        return;
+    }
+    var bar = document.getElementById("vimple-statusbar");
+    if (!bar) {
+        // Create the bar
+        bar = document.createElement("div");
+        document.body.appendChild(bar);        
+        bar.setAttribute("id", "vimple-statusbar");
+        bar.setAttribute("style", "position: fixed; bottom: 0px; right: 50px; padding-left: 1em; padding-right: 1em; background: lightgray; color: black; border: 1px solid gray");
+    }
+    bar.style.display = "";
+    bar.innerText = text;
+}
+
+function hideStatusBar(text) {
+    var bar = document.getElementById("vimple-statusbar");
+    if (bar) {
+        bar.style.display = "none";
     }
 }
 
