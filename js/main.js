@@ -1,6 +1,7 @@
 var hintTexts = [];
 var linkHints = [];
 var hintMode = false;
+var hintModeNewTab = false;
 var goMode = false;
 var insertMode = false;
 var statusBarEnabled = true;
@@ -16,12 +17,6 @@ codes[191] = "/";
 for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     for (var c2 = "A".charCodeAt(0); c2 <= "Z".charCodeAt(0); c2++) {
         hintTexts.push(String.fromCharCode(c) + String.fromCharCode(c2));
-    }
-}
-
-var handleScroll = function(event) {
-    if (hintMode) {
-        endHintMode();
     }
 }
 
@@ -153,7 +148,13 @@ function handleHintEvent(event) {
         }
     }
     if (linkHints.length == 1) {
-        window.location.href = linkHints[0].url;
+        // Check if http in url so we don't try to open an anchor with href="#top" in a new tab
+        if (hintModeNewTab && linkHints[0].url.indexOf("http") > -1) {
+            safari.self.tab.dispatchMessage("newTab", linkHints[0].url);
+        } else {
+            window.location.href = linkHints[0].url;
+        }
+        endHintMode();
     } else if (linkHints.length == 0) {
         endHintMode();
     }
@@ -163,8 +164,18 @@ function updateHintText(hint) {
     hint.node.innerHTML = "<span style=\"color: grey\">" + hint.hintText.slice(0,hint.typedIndex) + "</span>"+ "<b>" + hint.hintText.slice(hint.typedIndex, hint.hintText.length) + "</b>";
 }
 
-
 function openLink() {
+    hintMode = true;
+    showLinkHints();
+}
+
+function openLinkInNewTab() {
+    hintMode = true;
+    hintModeNewTab = true;
+    showLinkHints();
+}
+
+function showLinkHints() {
     showStatusBar("Open link in current tab");
     hintMode = true;
     var visibleLinks = getVisibleLinks();
@@ -204,6 +215,7 @@ function endHintMode() {
         linkHints.splice(0,1);
     }
     hintMode = false;
+    hintModeNewTab = false;
     hideStatusBar();
 }
 
@@ -279,6 +291,7 @@ var keyBindingsToFunctions = {
     "activateGoMode" : activateGoMode,
 //    "gg" : scrollToTop,
     "openLink" : openLink,
+    "openLinkInNewTab" : openLinkInNewTab,
     "activateInsertMode" : activateInsertMode,
     "handleEscape" : handleEscape,
     "openSettings" : openSettings
@@ -301,6 +314,12 @@ safari.self.addEventListener("message", function(event) {
         break;
     }
 }, false);
+
+var handleScroll = function(event) {
+    if (hintMode) {
+        endHintMode();
+    }
+}
 
 if (!document["hidden"]) {
     document.addEventListener("keydown", handleKeyPress);
