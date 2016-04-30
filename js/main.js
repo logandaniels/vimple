@@ -5,6 +5,7 @@ var hintModeNewTab = false;
 var goMode = false;
 var insertMode = false;
 var statusBarEnabled = true;
+var disabled = false;
 
 
 var codes = {};
@@ -75,7 +76,8 @@ var handleKeyPress = function(event) {
     if (!key) {
       return;
     }
-    if (event.metaKey ||
+    if (disabled ||
+        event.metaKey ||
         (insertMode && key !== "ESC") ||
         document.activeElement.tagName === "INPUT" ||
         document.activeElement.tagName === "TEXTAREA" ||
@@ -297,12 +299,22 @@ var keyBindingsToFunctions = {
     "openSettings" : openSettings
 }
 
-function setShortcutsFromSettings(settings) {
+function updateSettings(settings) {
   console.log("Got settings");
   console.log(settings);
   shortcuts = {};
-  for (var settingName in settings) {
-    shortcuts[settings[settingName]] = keyBindingsToFunctions[settingName];
+  for (var shortcutName in keyBindingsToFunctions) {
+    shortcuts[settings[shortcutName]] = keyBindingsToFunctions[shortcutName];
+  }
+
+  disabled = false;
+  for (var i = 0; i < settings["blacklist"].length; i++) {
+    var blacklistedURL = settings["blacklist"][i];
+    if (window.location.host.indexOf(blacklistedURL) > -1) {
+        console.log("Disabling on current url due to blacklist on " + blacklistedURL);
+        disabled = true;
+        break;
+    }
   }
 }
 
@@ -310,7 +322,7 @@ function setShortcutsFromSettings(settings) {
 safari.self.addEventListener("message", function(event) {
     switch (event.name) {
       case "getSettings":
-        setShortcutsFromSettings(event.message);
+        updateSettings(event.message);
         break;
     }
 }, false);

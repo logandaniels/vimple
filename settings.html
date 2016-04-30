@@ -5,14 +5,54 @@
 <style>
 
 label {
-  display: inline-block;
-  text-align: right;
-  width: 15%;
+  float: left;
+  width: 200px;
+}
+
+input {
+  float: left;
+  width: 150px;
 }
 
 .invalid-setting {
   border: 2px inset red;
 }
+
+.container:after {
+  content:"";
+  display:block;
+  clear:both;
+}
+
+.row {
+  clear: both;
+  width: 70%;
+}
+
+.explanation {
+  display: inline;
+  float: left;
+  color: gray;
+  margin-left:10px;
+  width: 200px;
+}
+
+.success {
+  color: darkgreen;
+  background: lightgreen;
+}
+
+.failure {
+  color: darkred;
+  background: pink;
+}
+
+#settings-result {
+  display: inline-block;
+  clear: both;
+  float: left;
+}
+
 
 </style>
 <script type="text/javascript">
@@ -63,6 +103,10 @@ function validateSettings() {
 
 function saveSettings() {
   if (!validateSettings()) {
+    var resultNode = document.getElementById("settings-result");
+    resultNode.classList.remove("success");
+    resultNode.classList.add("failure");
+    resultNode.innerText = "Unable to save settings. Please fix any errors and try again.";
     return;
   }
 
@@ -73,9 +117,20 @@ function saveSettings() {
     var settingName = input.id;
     newSettings[settingName] = input.value.trim();
   }
+  var blacklistValue = document.getElementById("blacklist").value.trim();
+  if (blacklistValue.length > 0) {
+      newSettings["blacklist"] = blacklistValue
+          .split(",")
+          .map(function(url) { return url.trim(); })
+          .filter(function(url) { return url.length > 0; });
+  }
 
   safari.self.tab.dispatchMessage("setSettings", newSettings);
 
+  var resultNode = document.getElementById("settings-result");
+  resultNode.classList.remove("failure");
+  resultNode.classList.add("success");
+  resultNode.innerText = "Settings saved.";
 }
 
 
@@ -108,25 +163,29 @@ window.addEventListener("load", function () {
 </script>
 </head>
 <body>
-
-<form>
-  <label>Activate 'go' mode</label><input type="text" class="keySetting" id="activateGoMode" /><br />
-  <label>Scroll to bottom</label><input type="text" class="keySetting" id="scrollToBottom" /><br />
-  <label>Scroll up</label><input type="text" class="keySetting" id="scrollUp" /><br />
-  <label>Scroll down</label><input type="text" class="keySetting" id="scrollDown" /><br />
-  <label>Open link in current tab</label><input type="text" class="keySetting" id="openLink" /><br />
-  <label>Open link in new tab</label><input type="text" class="keySetting" id="openLinkInNewTab" /><br />
-  <label>Open a new tab</label><input type="text" class="keySetting" id="newTab" /><br />
-  <label>Close current tab</label><input type="text" class="keySetting" id="closeTab" /><br />
-  <label>Go back in history</label><input type="text" class="keySetting" id="historyBack" /><br />
-  <label>Go forward in history</label><input type="text" class="keySetting" id="historyForward" /><br />
-  <label>Switch to previous tab</label><input type="text" class="keySetting" id="prevTab" /><br />
-  <label>Switch to next tab</label><input type="text" class="keySetting" id="nextTab" /><br />
-  <label>Activate insert mode</label><input type="text" class="keySetting" id="activateInsertMode" /><br />
-</form>
+  <div class="container">
+    <div class="row"><label>Activate 'go' mode</label><input type="text" class="keySetting" id="activateGoMode" /><br /></div>
+    <div class="row"><label>Scroll to bottom</label><input type="text" class="keySetting" id="scrollToBottom" /><br /></div>
+    <div class="row"><label>Scroll up</label><input type="text" class="keySetting" id="scrollUp" /><br /></div>
+    <div class="row"><label>Scroll down</label><input type="text" class="keySetting" id="scrollDown" /><br /></div>
+    <div class="row"><label>Open link in current tab</label><input type="text" class="keySetting" id="openLink" /><br /></div>
+    <div class="row"><label>Open link in new tab</label><input type="text" class="keySetting" id="openLinkInNewTab" /><br /></div>
+    <div class="row"><label>Open a new tab</label><input type="text" class="keySetting" id="newTab" /><br /></div>
+    <div class="row"><label>Close current tab</label><input type="text" class="keySetting" id="closeTab" /><br /></div>
+    <div class="row"><label>Go back in history</label><input type="text" class="keySetting" id="historyBack" /><br /></div>
+    <div class="row"><label>Go forward in history</label><input type="text" class="keySetting" id="historyForward" /><br /></div>
+    <div class="row"><label>Switch to previous tab</label><input type="text" class="keySetting" id="prevTab" /><br /></div>
+    <div class="row"><label>Switch to next tab</label><input type="text" class="keySetting" id="nextTab" /><br /></div>
+    <div class="row"><label>Activate insert mode</label><input type="text" class="keySetting" id="activateInsertMode" /><br /></div>
+    <br /><br /> 
+    <div class="row"><label>URL blacklist</label><input type="text" id="blacklist" /><div class="explanation">A comma-delimited list of hostnames. Example: "mail.google.com,drive.google.com,apple.com"</div></div>
+  </div>
 
 <button id="saveSettingsButton">Save settings</button>
 
 <button id="logSettingsButton">Log settings</button>
+<br />
+
+<div id="settings-result"></div>
 </body>
 </html>

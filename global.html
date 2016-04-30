@@ -4,8 +4,6 @@
 <title>global HTML page</title>
 <script type="text/javascript">
 
-// TODO: Some sort of easy-motion type thing where you tpye / to search, put in some text, and it switches to the tab that fuzzy matches your query
-
 var defaultSettings = {
     scrollDown : "j",
     scrollUp : "k",
@@ -22,7 +20,9 @@ var defaultSettings = {
     openLinkInNewTab : "F",
     activateInsertMode : "i",
     handleEscape : "ESC",
-    openSettings : "?"
+    openSettings : "?",
+
+    blacklist : []
 }
 
 if (safari.extension.settings["firstRun"] === "true") {

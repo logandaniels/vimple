@@ -14,7 +14,7 @@ This is a clone of extensions like Vimium and Vimari, created partially to add f
 * Navigate between adjacent tabs
 * Reload page
 * Insert mode for temporarily ignoring key bindings, e.g. while interacting with an HTML5 canvas
+* URL blacklist for disabling extension on certain domains
 
 ### Future additions
-* URL blacklist for disabling extension
 * Regexp search on page?
