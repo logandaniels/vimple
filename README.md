@@ -5,15 +5,16 @@ This is a clone of extensions like Vimium and Vimari, created partially to add f
 
 
 ### Current features
+* Configurable key bindings
 * Link hint navigation!
 * Open tab, close tab
 * Scroll up, scroll down
+* Scroll to top or bottom of page
 * Navigate back and forward in history
 * Navigate between adjacent tabs
 * Reload page
+* Insert mode for temporarily ignoring key bindings, e.g. while interacting with an HTML5 canvas
 
 ### Future additions
-* Insert mode for temporarily ignoring key bindings, e.g. while interacting with an HTML5 canvas
+* URL blacklist for disabling extension
 * Regexp search on page?
-* Fuzzy quick search to switch to a particular tab?
-* More to come
