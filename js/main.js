@@ -1,3 +1,6 @@
+// Suppress running within iframes, so that we only
+// have one instance of the script per tab
+if (window.top === window) {
 var hintTexts = [];
 var linkHints = [];
 var hintMode = false;
@@ -352,3 +355,4 @@ document.addEventListener("visibilitychange", function(event) {
 });
 
 safari.self.tab.dispatchMessage("getSettings");
+}
