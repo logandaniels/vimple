@@ -82,7 +82,6 @@ function validateSettings() {
 
     if (!val.match(/[a-z]/i)) {
       input.classList.add("invalid-setting");
-      console.log("ERROR WITH " + input.value);
       valid = false;
     }
 
@@ -174,6 +173,7 @@ window.addEventListener("load", function () {
     <div class="row"><label>Close current tab</label><input type="text" class="keySetting" id="closeTab" /><br /></div>
     <div class="row"><label>Go back in history</label><input type="text" class="keySetting" id="historyBack" /><br /></div>
     <div class="row"><label>Go forward in history</label><input type="text" class="keySetting" id="historyForward" /><br /></div>
+    <div class="row"><label>Reload page</label><input type="text" class="keySetting" id="reloadPage" /><br /></div>
     <div class="row"><label>Switch to previous tab</label><input type="text" class="keySetting" id="prevTab" /><br /></div>
     <div class="row"><label>Switch to next tab</label><input type="text" class="keySetting" id="nextTab" /><br /></div>
     <div class="row"><label>Activate insert mode</label><input type="text" class="keySetting" id="activateInsertMode" /><br /></div>

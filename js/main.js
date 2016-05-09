@@ -57,7 +57,7 @@ function newTab() {
 function closeTab() {
     safari.self.tab.dispatchMessage("closeTab");
 }
-function reload() {
+function reloadPage() {
     document.location.reload(true);
 }
 function scrollToBottom() {
@@ -288,6 +288,7 @@ var keyBindingsToFunctions = {
     "scrollUp" : scrollUp,
     "historyBack" : historyBack,
     "historyForward" : historyForward,
+    "reloadPage" : reloadPage,
     "prevTab" : prevTab,
     "nextTab" : nextTab,
     "newTab" : newTab,
@@ -303,8 +304,6 @@ var keyBindingsToFunctions = {
 }
 
 function updateSettings(settings) {
-  console.log("Got settings");
-  console.log(settings);
   shortcuts = {};
   for (var shortcutName in keyBindingsToFunctions) {
     shortcuts[settings[shortcutName]] = keyBindingsToFunctions[shortcutName];
@@ -314,7 +313,6 @@ function updateSettings(settings) {
   for (var i = 0; i < settings["blacklist"].length; i++) {
     var blacklistedURL = settings["blacklist"][i];
     if (window.location.host.indexOf(blacklistedURL) > -1) {
-        console.log("Disabling on current url due to blacklist on " + blacklistedURL);
         disabled = true;
         break;
     }
