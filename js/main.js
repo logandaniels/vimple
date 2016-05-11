@@ -16,7 +16,10 @@ for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     codes[c] = String.fromCharCode(c);
 }
 codes[27] = "ESC";
+codes[220] = "\\";
 codes[191] = "/";
+codes[219] = "[";
+codes[221] = "]";
 
 for (var c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
     for (var c2 = "A".charCodeAt(0); c2 <= "Z".charCodeAt(0); c2++) {
@@ -74,7 +77,46 @@ function activateGoMode() {
     goMode = true;
 }
 
-var handleKeyPress = function(event) {
+// Credit to Vimium for these patterns
+// (Ordered by priority)
+var nextPatterns = [/^≫/, /^»/, /^Newer/i, /^Next/i, /^>>/, /^>/,  /^→/, /^More/i];
+var prevPatterns = [/^≪/, /^«/, /^Prev/i, /^Previous/i, /^Older/i, /^Back/i, /^<</, /^</, /^←/, ];
+
+function isInternalLink(url) {
+  // Matches http://, https://, //
+  return !(/^(\w+:)?\/\//.test(url));
+}
+
+function getFirstMatchingInnerText(arr, patterns) {
+  for (var i = 0; i < patterns.length; i++) {
+    for (var j = 0; j < arr.length; j++) {
+      var el = arr[j];
+      var text = el.innerText.trim();
+      if (patterns[i].test(text) &&
+          isInternalLink(el.getAttribute("href")) &&
+          !(isHidden(el))) {
+        return el;
+      }
+    }
+  }
+  return null;
+}
+
+function nextPage() {
+  var el = getFirstMatchingInnerText(document.links, nextPatterns);
+  if (el) {
+    window.location.href = el.href;
+  }
+}
+
+function prevPage() {
+  var el = getFirstMatchingInnerText(document.links, prevPatterns);
+  if (el) {
+    window.location.href = el.href;
+  }
+}
+
+function handleKeyPress(event) {
     var key = codes[event.keyCode];
     if (!key) {
       return;
@@ -109,6 +151,20 @@ var handleKeyPress = function(event) {
                       shortcuts["?"]();
                     } else {
                       shortcuts["/"]();
+                    }
+                    break;
+                case "]":
+                    if (event.shiftKey) {
+                      shortcuts["}"]();
+                    } else {
+                      shortcuts["]"]();
+                    }
+                    break;
+                case "[":
+                    if (event.shiftKey) {
+                      shortcuts["{"]();
+                    } else {
+                      shortcuts["["]();
                     }
                     break;
                 default:
@@ -225,17 +281,19 @@ function endHintMode() {
 }
 
 function getVisibleLinks() {
-    var a = document.getElementsByTagName("a");
-    var links = Array.prototype.filter.call(a, function(el) {
-        return el.hasAttribute("href") && isVisible(el);
+    var links = document.links;
+    var visibleLinks = Array.prototype.filter.call(links, function(el) {
+        return isVisible(el);
     });
-    return links;
+    return visibleLinks;
 }
 
 function isVisible(elem) {
     var rect = elem.getBoundingClientRect();
     var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-    if ((rect.top === 0 && rect.bottom === 0 && rect.left === 0 && rect.right === 0) ||
+    if ((  rect.top === 0 && rect.bottom === 0 &&
+           rect.left === 0 && rect.right === 0
+        ) ||
         (rect.bottom < 0 || rect.top - viewHeight >= 0)) {
        return false;
     }
@@ -250,7 +308,7 @@ function isHidden(elem) {
         return true;
     }
     
-    // Check if of its ancestors is hidden
+    // Recursively check if any of its ancestors are hidden
     if (elem.parentNode.style) {
         return isHidden(elem.parentNode);
     } else {
@@ -296,6 +354,8 @@ var keyBindingsToFunctions = {
     "scrollToBottom" : scrollToBottom,
     "activateGoMode" : activateGoMode,
 //    "gg" : scrollToTop,
+    "nextPage" : nextPage,
+    "prevPage" : prevPage,
     "openLink" : openLink,
     "openLinkInNewTab" : openLinkInNewTab,
     "activateInsertMode" : activateInsertMode,
