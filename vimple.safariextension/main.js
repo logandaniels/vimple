@@ -80,20 +80,33 @@ function activateGoMode() {
 // Credit to Vimium for these patterns
 // (Ordered by priority)
 var nextPatterns = [/^≫/, /^»/, /^Newer/i, /^Next/i, /^>>/, /^>/,  /^→/, /^More/i];
-var prevPatterns = [/^≪/, /^«/, /^Prev/i, /^Previous/i, /^Older/i, /^Back/i, /^<</, /^</, /^←/, ];
+var prevPatterns = [/^≪/, /^«/, /^Prev/i, /^Previous/i, /^Older/i, /^Back/i, /^<</, /^<$/, /^< /, /^←/, ];
 
-function isInternalLink(url) {
-  // Matches http://, https://, //
-  return !(/^(\w+:)?\/\//.test(url));
+function isInternalLink(a) {
+  return a.host === window.location.host;
 }
 
-function getFirstMatchingInnerText(arr, patterns) {
+function similarLinks(url1, url2) {
+  if (Math.abs(url1.length - url2.length) > 10) {
+    return false;
+  }
+  // Check that the majority of the characters in the link are the same
+  for (var i = 0; i < Math.min(url1.length, url2.length) - 10; i++) {
+    if (url1[i] !== url2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function getFirstMatchingNavigationLink(arr, patterns) {
   for (var i = 0; i < patterns.length; i++) {
     for (var j = 0; j < arr.length; j++) {
       var el = arr[j];
       var text = el.innerText.trim();
       if (patterns[i].test(text) &&
-          isInternalLink(el.getAttribute("href")) &&
+          isInternalLink(el) &&
+          similarLinks(el.href, window.location.href) &&
           !(isHidden(el))) {
         return el;
       }
@@ -103,14 +116,14 @@ function getFirstMatchingInnerText(arr, patterns) {
 }
 
 function nextPage() {
-  var el = getFirstMatchingInnerText(document.links, nextPatterns);
+  var el = getFirstMatchingNavigationLink(document.links, nextPatterns);
   if (el) {
     window.location.href = el.href;
   }
 }
 
 function prevPage() {
-  var el = getFirstMatchingInnerText(document.links, prevPatterns);
+  var el = getFirstMatchingNavigationLink(document.links, prevPatterns);
   if (el) {
     window.location.href = el.href;
   }
