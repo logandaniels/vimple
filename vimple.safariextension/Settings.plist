@@ -8,5 +8,15 @@
 		<key>Key</key>
 		<string>firstRun</string>
 	</dict>
+	<dict>
+		<key>Title</key>
+		<string>Press the '?' key on any page to open Settings.</string>
+		<key>Type</key>
+		<string>Group</string>
+	</dict>
+	<dict>
+		<key>Type</key>
+		<string>Separator</string>
+	</dict>
 </array>
 </plist>
