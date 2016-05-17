@@ -70,7 +70,7 @@ function setInitialSettings(settings) {
 
 function validateSettings() {
   var settingsInputs = document.getElementsByClassName("keySetting");
-  var valid = true;
+  var valid = new Set();
   for (var i = 0; i < settingsInputs.length; i++) {
     var input = settingsInputs[i];
     input.classList.remove("invalid-setting");
@@ -80,9 +80,11 @@ function validateSettings() {
       continue;
     }
 
-    if (!val.match(/[a-z]/i) || val.length > 1) {
+    // Permitting multi-character keybindings is a potential TODO,
+    // but for now we only allow single-character bindings
+    if (val.length > 1) {
       input.classList.add("invalid-setting");
-      valid = false;
+      valid.add("Keybindings may only be one character long.")
     }
 
     // Check if user bound two actions to the same shortcut
@@ -92,7 +94,7 @@ function validateSettings() {
       if (val === otherVal) {
         input.classList.add("invalid-setting");
         otherInput.classList.add("invalid-setting");
-        valid = false;
+        valid.add("Two actions cannot have the same keybinding.");
       }
     }
   }
@@ -101,11 +103,17 @@ function validateSettings() {
 }
 
 function saveSettings() {
-  if (!validateSettings()) {
+  var errors = validateSettings();
+  if (errors.size > 0) {
     var resultNode = document.getElementById("settings-result");
     resultNode.classList.remove("success");
     resultNode.classList.add("failure");
-    resultNode.innerText = "Unable to save settings. Please fix any errors and try again.";
+    var errorText = "Unable to save settings.\nErrors:\n";
+    errors.forEach(function(error) {
+      errorText += "\t* " + error + "\n";
+    });
+    errorText += "Please fix these errors and try again.";
+    resultNode.innerText = errorText;
     return;
   }
 
