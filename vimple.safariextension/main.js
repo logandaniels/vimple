@@ -142,6 +142,7 @@ function handleKeyPress(event) {
         document.activeElement.getAttribute("contentEditable") === "true") {
         return;
     }
+    event.preventDefault();
     if (hintMode) {
         handleHintEvent(event);
     } else if (goMode) {
@@ -411,19 +412,6 @@ if (!document["hidden"]) {
     document.addEventListener("keydown", handleKeyPress);
     document.addEventListener("scroll", handleScroll);
 }
-
-/* Slight delay before re-enabling keypress listeners when switching
- * into a tab, to avoid repeated keypresses when switching tabs
- */
-document.addEventListener("visibilitychange", function(event) {
-    if (!document["hidden"]) {
-        setTimeout(function() {
-            document.addEventListener("keydown", handleKeyPress);
-        }, 50);
-    } else {
-        document.removeEventListener("keydown", handleKeyPress);
-    }
-});
 
 safari.self.tab.dispatchMessage("getSettings");
 }
